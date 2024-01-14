@@ -1,0 +1,45 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Definindo as configurações específicas para cada máquina virtual
+machines = {
+  "srv-vm-web01" => {"memory" => "1024", "cpu" => "1", "ip" => "10", "image" => "centos/7"},
+}
+
+Vagrant.configure("2") do |config|
+
+  # Desabilita a verificação de atualizações da box durante o vagrant up
+  config.vm.box_check_update = false
+
+  # Desabilita a atualização automática do VirtualBox Guest Additions
+  config.vbguest.auto_update = false
+
+  # Loop para configurar cada máquina virtual
+  machines.each do |name, conf|
+    config.vm.define "#{name}" do |machine|
+
+      # Provisionamento para copiar a chave SSH e ajustar permissões
+      config.vm.provision "file", source: "~/.ssh/id_rsa.pub", destination: "/home/vagrant/.ssh/authorized_keys"
+      config.vm.provision "shell", inline: "chown -R vagrant:vagrant /home/vagrant/.ssh/authorized_keys && chmod 700 /home/vagrant/.ssh && chmod 600 /home/vagrant/.ssh/authorized_keys"
+
+      # Configuração de encaminhamento de porta
+      config.vm.network "forwarded_port", guest: 80, host: 8080, host_ip: "127.0.0.1"
+
+      # Provisionamento adicional usando um script shell
+      config.vm.provision "shell", path: "files/provision.sh"
+
+      # Configuração da box, hostname e rede privada
+      machine.vm.box = "#{conf["image"]}"
+      machine.vm.hostname = "#{name}.lab"
+      machine.vm.network "private_network", ip: "192.168.56.#{conf["ip"]}"
+
+      # Configuração específica para o provider VirtualBox
+      machine.vm.provider "virtualbox" do |vb|
+        vb.name = "#{name}"
+        vb.memory = conf["memory"]
+        vb.cpus = conf["cpu"]
+        vb.customize ["modifyvm", :id, "--groups", "/DEVOPS"]
+      end
+    end
+  end
+end
