@@ -10,6 +10,5 @@ Práticas de CI/CD (Integração Contínua e Entrega Contínua).
 Orquestração de contêineres usando ferramentas populares.
 Monitoramento e análise de desempenho.
 Práticas e princípios de SRE para garantir confiabilidade e escalabilidade.
-Este repositório é um espaço colaborativo para compartilhar conhecimento e experiências no domínio do DevOps e SRE. Contribuições e sugestões são bem-vindas!
 
-### Lembre-se de personalizar a descrição de acordo com os objetivos específicos do seu repositório e os tópicos exatos que você pretende abordar.
+### Este repositório é um espaço colaborativo para compartilhar conhecimento e experiências no domínio do DevOps e SRE. Contribuições e sugestões são bem-vindas!

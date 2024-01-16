@@ -1,0 +1,55 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Configuração específica para cada máquina virtual
+machines = {
+  "srv-vm-node01" => {"memory" => "1024", "cpu" => "1", "ip" => "11", "image" => "centos/7"},
+  "srv-vm-app01" => {"memory" => "1024", "cpu" => "1", "ip" => "12", "image" => "centos/7"},
+  "srv-vm-db01" => {"memory" => "1024", "cpu" => "1", "ip" => "13", "image" => "centos/7"}
+}
+
+Vagrant.configure("2") do |config|
+
+  # Desabilita a verificação de atualizações da box durante o vagrant up
+  config.vm.box_check_update = false
+
+  # Desabilita a atualização automática do VirtualBox Guest Additions
+  config.vbguest.auto_update = false
+
+  # Configuração comum para sincronização de pastas e provisionamento
+  config.vm.synced_folder ".", "/vagrant", type: "nfs", nfs_version: "4", nfs_udp: false
+  config.vm.provision "shell", path: "files/provision.sh"
+
+      # Provisionamento para copiar a chave SSH e ajustar permissões
+      config.vm.provision "file", source: "~/.ssh/id_rsa.pub", destination: "/home/vagrant/.ssh/authorized_keys"
+      config.vm.provision "shell", inline: "chown -R vagrant:vagrant /home/vagrant/.ssh/authorized_keys && chmod 700 /home/vagrant/.ssh && chmod 600 /home/vagrant/.ssh/authorized_keys"
+
+  # Loop para configurar cada máquina virtual
+  machines.each do |name, conf|
+    config.vm.define "#{name}" do |machine|
+
+      # Configuração da box, hostname e rede privada
+      machine.vm.box = "#{conf["image"]}"
+      machine.vm.hostname = "#{name}.lab"
+      machine.vm.network "private_network", ip: "192.168.56.#{conf["ip"]}"
+
+      # Configuração específica para o provider VirtualBox
+      machine.vm.provider "virtualbox" do |vb|
+        vb.name = "#{name}"
+        vb.memory = conf["memory"]
+        vb.cpus = conf["cpu"]
+        vb.customize ["modifyvm", :id, "--groups", "/ANSIBLE"]
+      end
+
+      # Configurações específicas para a máquina srv-vm-app01
+      if name == "srv-vm-app01"
+        machine.vm.network "forwarded_port", guest: 8080, host: 8081, host_ip: "127.0.0.1"
+      end
+
+      # Configurações específicas para a máquina srv-vm-db01
+      if name == "srv-vm-db01"
+        machine.vm.network "forwarded_port", guest: 3306, host: 3306, host_ip: "127.0.0.1"
+      end
+    end
+  end
+end

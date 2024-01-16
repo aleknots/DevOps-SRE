@@ -13,11 +13,11 @@ function log_error() {
 # Função para imprimir mensagem sobre a atualização e o upgrade dos pacotes do sistema
 function main() {
   log_info "Updating and upgrading packages..."
-  yum update -y && yum upgrade -y >/dev/null 2>&1
+  yum update -y && yum upgrade -y > /dev/null 2>&1
 
 # Função principal que executa as etapas de instalação do Apache
   log_info "Installing Apache..."
-  yum install -y httpd >/dev/null 2>&1
+  yum install -y httpd > /dev/null 2>&1
 
 # Função para copiar os arquivos HTML para o diretório raiz do Apache
   if [ $? -eq 0 ]; then
@@ -29,7 +29,7 @@ function main() {
     systemctl start httpd.service
 
 # Função para exibir mensagem de conclusão
-    log_info "Installation completed. Access http://localhost:8080/"
+    log_info "Installation completed, Access http://localhost:8080/"
   else
     log_error "Failed to install Apache. Check the logs for details."
   fi
